@@ -34,8 +34,8 @@ jobs:
 
       - name: Criar merge para main
         run: |
-          git branch main
-          git checkout main
+          git checkout dev
+          git checkout -B main
           git merge dev --no-ff -m "CI: merge dev into main"
           git push origin main
 
