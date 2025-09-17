@@ -4,43 +4,73 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - dev  # Só roda quando tiver push na branch dev
+      - dev # Só roda quando tiver push na branch dev
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout código
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v4
+        
       - name: Instalar Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
-
+          cache: 'pip' # Cache das dependências
+          
       - name: Instalar dependências
         run: pip install -r requirements.txt
-
+        
       - name: Rodar testes
         run: pytest --maxfail=1 --disable-warnings -q
+        
 
   release:
     needs: test
     runs-on: ubuntu-latest
     if: success()
+    permissions:
+      contents: write # Necessário para push e criar tags
     steps:
       - name: Checkout código
-        uses: actions/checkout@v3
-
-      - name: Criar merge para main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Necessário para ter todo o histórico
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Configurar Git
+        run: |
+          git config --global user.name "Pedro Franca"
+          git config --global user.email "pedrowill.developer@gmail.com"
+          
+      - name: Fazer merge dev → main
         run: |
           git fetch origin
           git checkout main
-          git merge dev -m "CI: merge dev into main"
+          git merge origin/dev --no-ff -m "CI: merge dev into main [skip ci]"
           git push origin main
-
+          
       - name: Criar tag automática
         run: |
           VERSION=v$(date +'%Y.%m.%d.%H%M')
-          git tag -a $VERSION -m "Release $VERSION"
+          git tag -a $VERSION -m "Release $VERSION - Auto generated"
           git push origin $VERSION
+          
+      - name: Criar Release no GitHub
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v$(date +'%Y.%m.%d.%H%M')
+          release_name: Release v$(date +'%Y.%m.%d.%H%M')
+          body: |
+            ## 🚀 Release Automático
+            
+            Merge automático da branch `dev` para `main` após testes passarem.
+            
+            **Commits incluídos:**
+            - Todos os commits da branch dev desde o último release
+            
+          draft: false
+          prerelease: false
