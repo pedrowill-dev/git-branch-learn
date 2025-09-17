@@ -51,7 +51,7 @@ jobs:
           git merge origin/dev --no-ff -m "CI: merge dev into main [skip ci]"
           git push origin main
           
-      - name: Criar tag automática
+      - name: Criar tag automátic
         run: |
           VERSION=v$(date +'%Y.%m.%d.%H%M')
           git tag -a $VERSION -m "Release $VERSION - Auto generated"
