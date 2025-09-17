@@ -57,20 +57,3 @@ jobs:
           git tag -a $VERSION -m "Release $VERSION - Auto generated"
           git push origin $VERSION
           
-      - name: Criar Release no GitHub
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v$(date +'%Y.%m.%d.%H%M')
-          release_name: Release v$(date +'%Y.%m.%d.%H%M')
-          body: |
-            ## 🚀 Release Automático
-            
-            Merge automático da branch `dev` para `main` após testes passarem.
-            
-            **Commits incluídos:**
-            - Todos os commits da branch dev desde o último release
-            
-          draft: false
-          prerelease: false
